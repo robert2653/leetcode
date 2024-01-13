@@ -1,48 +1,51 @@
 #include <bits/stdc++.h>
 using namespace std;
+
+// 題意: 找出所有子序列，有 k 個不同數，的子序列個數
+// 使用 sliding window
+// l ~ r 紀錄 右端點是 r 的最大可行子序列
+// m ~ r 紀錄 右端點是 m 的最大可行子序列
+// ans += m - l + 1;
+
 class Solution {
 public:
     int subarraysWithKDistinct(vector<int>& nums, int k) {
-        // first find an ans
-        // use queue
-        // r+1 or l+1 or r+1&&l+1
         int ans = 0;
         int sz = nums.size();
-        int now = 0;
-        queue<pair<unordered_map<int, int>, pair<int, int>>> q;
-        unordered_map<int, int> mp;
-        while(now < sz){
-            mp[nums[now]]++;
-            if(mp.size() == k){
-                q.push({mp, {0, now}});
-                break;
-            }
-            now++;
-        }
-        while(!q.empty()){
-            ans++;
-            unordered_map<int, int> tmp = q.front().first;
-            int l = q.front().second.first, r = q.front().second.second;
-            while(r < sz - 1){
-                r++;
-                tmp[nums[r]]++;
-                if(tmp.size() == k) q.push({tmp, {l, r}});
-                else break;
-            }
-            tmp = q.front().first;
-            l = q.front().second.first, r = q.front().second.second;
-            while(true){
+        map<int, int> mp_for_l_to_r, mp_for_m_to_r;
+        int l = 0, m = 0, r = -1;
+        while(r < sz - 1){
+            r++;
+            mp_for_l_to_r[nums[r]]++;
+            mp_for_m_to_r[nums[r]]++;
+            // 把 l 做到符合 k 就結束
+            while(mp_for_l_to_r.size() > k){
+                mp_for_l_to_r[nums[l]]--;
+                if(mp_for_l_to_r[nums[l]] == 0) mp_for_l_to_r.erase(nums[l]);
                 l++;
-                tmp[nums[l]]--;
-                if(!tmp[nums[l]]) tmp.erase(nums[l]);
-                if(tmp.size() == k) q.push({tmp, {l, r}});
-                else break;
             }
-            q.pop();
+            // 把 m 做到符合 k 並且要最小化它
+            while(mp_for_m_to_r.size() > k || (mp_for_m_to_r.size() == k && mp_for_m_to_r[nums[m]] != 1)){
+                mp_for_m_to_r[nums[m]]--;
+                if(mp_for_m_to_r[nums[m]] == 0) mp_for_m_to_r.erase(nums[m]);
+                m++;
+            }
+            if(mp_for_l_to_r.size() == k){ // 特判 ans == 0 的測資
+                ans += (m - l + 1);
+                // cout << l << " " << m << " " << r << endl;
+            }
         }
         return ans;
     }
 };
 int main(){
-    
+    int t; cin >> t;
+    while(t--){
+        int n; cin >> n;
+        vector<int> v(n);
+        for(int i = 0; i < n; i++) cin >> v[i];
+        int k; cin >> k;
+        Solution x;
+        cout << x.subarraysWithKDistinct(v, k) << "\n";
+    }
 }
